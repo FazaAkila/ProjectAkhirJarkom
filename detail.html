@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOKO API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Detail Menu</h1>
+        <div id="loading" class="text-center text-blue-500">Memuat data...</div>
+        <div id="menu-detail" class="bg-white rounded-lg shadow-md p-6 hidden">
+       
+        </div>
+    </div>
+
+
+    <script>
+
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const id = urlParams.get('id');
+
+
+        const apiUrl = `http://localhost:8000/api/menu/${id}`;
+
+
+   
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const loadingElement = document.getElementById('loading');
+                const menuDetail = document.getElementById('menu-detail');
+
+
+               
+                loadingElement.style.display = 'none';
+
+
+                if (data.status === 'error') {
+                    menuDetail.innerHTML = `<p class="text-red-500">Data menu tidak ditemukan.</p>`;
+                    menuDetail.classList.remove('hidden');
+                    return;
+                }
+
+
+               
+                const item = data.data;
+                menuDetail.innerHTML = `
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">${item.name}</h2>
+                    <p class="text-lg text-gray-500">${item.category}</p>
+                    <p id="stok-${item.id_menu}" class="text-gray-700">Stok: <span class="font-medium">${item.stock}</span></p>
+                    <p class="text-gray-700">Harga: <span class="font-medium">Rp ${parseInt(item.price).toLocaleString()}</span></p>
+                    <p class="mt-4 text-gray-600">${item.note}</p>
+                    <button onclick="beliMenu(${item.id_menu})" class="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">Beli</button>
+                `;
+                menuDetail.classList.remove('hidden');
+            })
+            .catch(error => {
+                const loadingElement = document.getElementById('loading');
+                loadingElement.textContent = `Terjadi kesalahan: ${error.message}`;
+            });
+
+
+            function beliMenu(id) {
+            fetch(`${apiUrl}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    jumlah: 1
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Gagal mengurangi stok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                     
+                        const stokElement = document.getElementById(`stok-${id}`);
+                        stokElement.textContent = "Stok: "+data.updated_stock;
+                        alert('Berhasil membeli menu!');
+                    } else {
+                        alert('Stok menu tidak cukup!');
+                    }
+                })
+                .catch(error => {
+                    alert(`Terjadi kesalahan: ${error.message}`);
+                });
+        }
+    </script>
+</body>
+</html>

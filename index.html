@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOKO API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Daftar Menu</h1>
+        <div id="loading" class="text-center text-blue-500">Memuat data...</div>
+        <main id="menu" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </main>
+    </div>
+
+
+    <script>
+        const apiUrl = 'http://localhost:8000/api/menu';
+     
+
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const loadingElement = document.getElementById('loading');
+                const menuContainer = document.getElementById('menu');
+
+
+                loadingElement.style.display = 'none';
+
+
+         
+                data.data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.onclick = () => {
+                        window.location.href = `detail.html?id=${item.id_menu}`;
+                    };
+                    card.className = 'bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow';
+                    card.innerHTML = `
+                        <h2 class="text-lg font-bold text-gray-800">${item.name}</h2>
+                        <p class="text-sm text-gray-500">${item.category}</p>
+                        <p class="text-gray-700">Stok: <span id="stok-${item.id_menu}" class="font-medium">${item.stock}</span></p>
+                        <p class="text-gray-700">Harga: <span class="font-medium">Rp ${parseInt(item.price).toLocaleString()}</span></p>
+                        <p class="mt-4 text-gray-600 text-sm">${item.note}</p>
+                     
+                    `;
+                    menuContainer.appendChild(card);
+                });
+            })
+            .catch(error => {
+                const loadingElement = document.getElementById('loading');
+                loadingElement.textContent = `Terjadi kesalahan: ${error.message}`;
+            });
+
+
+
+    </script>
+</body>
+</html>
